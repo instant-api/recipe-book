@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Instant Todo List API</title>
+  </head>
+  <body>
+    <pre style="line-height: 1.5">
+<h3 style="margin: 0" >Instant Todo List API</h3>
+<b>GET <a href="/">/</a></b>
+- Return this page
+
+<b>GET <a href="/recipes">/recipes</a></b>
+List all recipes
+- Return an array of all the recipes width
+  - id
+  - name
+  - time: time in minute or null
+  - description: first 3 lines
+
+<b>POST <a href="/recipe">/recipe</a></b>
+Create a Recipe
+- Body
+  - name
+  - time: [optional] The time in minutes to execute the recipe
+  - tags: an array of tags
+  - ingredients: list of ingredients
+    - name
+    - quantity: a string to express how much of the ingredient is needed
+  - description
+- Return the created Recipe { id: "", name: "", ... }
+
+<b>GET <a href="/recipe/[id]">/recipe/[id]</a></b>
+Get a Recipe by it's ID
+- Return the recipe
+
+<b>PUT <a href="/recipe/[id]">/recipe/[id]</a></b>
+Update a recipe
+- Body: same as create execpt all properties are optional
+- Return the updated recipe
+
+<b>DELETE <a href="/recipe/[id]">/recipe/[id]</a></b>
+Delete a recipe
+- Return an empty response
+
+<b>GET <a href="/tags">/tags</a></b>
+List all tags
+- Return an list of all tags
+
+<b>GET <a href="/tag/[tag]">/tag/[tag]</a></b>
+List all recipe for a tag
+- Return an list of all recipe containing the tag
+
+    </pre>
+  </body>
+</html>
