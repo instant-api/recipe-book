@@ -61,13 +61,11 @@ const ingredientYup = Yup.object().shape({
 const newRecipeValidator = YupValidator(
   Yup.object().shape({
     name: Yup.string().required(),
-    time: Yup.number(),
+    time: Yup.number().nullable(),
     tags: Yup.array()
       .of(Yup.string())
       .required(),
-    ingredients: Yup.array()
-      .of(ingredientYup)
-      .required(),
+    ingredients: Yup.array().of(ingredientYup),
     description: Yup.string().required(),
   })
 );
@@ -86,7 +84,9 @@ export function createServer(filePath: string, helpContent: string): TumauServer
   const server = TumauServer.create({
     handleErrors: false,
     mainMiddleware: Middleware.compose(
-      CorsPackage(),
+      CorsPackage({
+        allowHeaders: ['content-type'],
+      }),
       JsonPackage(),
       InvalidResponseToHttpError,
       RouterPackage([
@@ -132,19 +132,19 @@ export function createServer(filePath: string, helpContent: string): TumauServer
             throw new HttpError.NotFound();
           }
           const updated = updateRecipeValidator.getValue(tools);
-          if (updated.name) {
+          if (updated.name !== undefined) {
             recipe.name = updated.name;
           }
-          if (updated.time) {
+          if (updated.time !== undefined) {
             recipe.time = updated.time;
           }
-          if (updated.description) {
+          if (updated.description !== undefined) {
             recipe.description = updated.description;
           }
-          if (updated.ingredients) {
+          if (updated.ingredients !== undefined) {
             recipe.ingredients = updated.ingredients;
           }
-          if (updated.tags) {
+          if (updated.tags !== undefined) {
             recipe.tags = updated.tags.map(slugify);
           }
           await write(filePath, data);
