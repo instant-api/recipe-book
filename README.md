@@ -32,14 +32,14 @@ npx @instant-api/recipe-book
 - `--port` or `-p`: The port to use
 - `--file` or `-f`: The path to the json file used to store data.
 
-**Note**: By default the `file` is set to `todo--list-db.json`.
+**Note**: By default the `file` is set to `recipe-book-db.json`.
 
 ```bash
-npx @instant-api/recipe-book --port 9000 --file todo.json
+npx @instant-api/recipe-book --port 9000 --file recipes.json
 ```
 
 If you provide an argument with no name is will be used as the `file argument`
 
 ```bash
-npx @instant-api/recipe-book --file todo.json
+npx @instant-api/recipe-book --file recipes.json
 ```

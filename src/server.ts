@@ -64,8 +64,10 @@ const newRecipeValidator = YupValidator(
     time: Yup.number().nullable(),
     tags: Yup.array()
       .of(Yup.string())
-      .required(),
-    ingredients: Yup.array().of(ingredientYup),
+      .default([]),
+    ingredients: Yup.array()
+      .of(ingredientYup)
+      .default([]),
     description: Yup.string().required(),
   })
 );
