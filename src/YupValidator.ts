@@ -1,11 +1,5 @@
 import * as Yup from 'yup';
-import {
-  Middleware,
-  Tools,
-  Context,
-  JsonParserConsumer,
-  HttpError,
-} from 'tumau';
+import { Middleware, Tools, Context, JsonParserConsumer, HttpError } from 'tumau';
 
 export function YupValidator<T>(schema: Yup.Schema<T>) {
   const Ctx = Context.create<T>();

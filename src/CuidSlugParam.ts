@@ -1,8 +1,6 @@
 import { CheminParam } from 'tumau';
 
-export function CuidSlugParam<N extends string>(
-  name: N
-): CheminParam<N, string> {
+export function CuidSlugParam<N extends string>(name: N): CheminParam<N, string> {
   const reg = /^[a-z0-9]{7,10}$/;
   return {
     name,
