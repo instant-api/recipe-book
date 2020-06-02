@@ -1,6 +1,6 @@
 # Instant Recipes Book API
 
-> A CLI to create a small Todo List API
+> A CLI to create a small Recipes Book API
 
 This package let you quickly create a small JSON API to
 

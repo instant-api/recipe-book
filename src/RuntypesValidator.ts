@@ -1,18 +1,17 @@
-import * as Yup from 'yup';
+import * as RT from 'runtypes';
 import { Middleware, Tools, Context, JsonParserConsumer, HttpError } from 'tumau';
 
-export function YupValidator<T>(schema: Yup.Schema<T>) {
+export function RuntypesValidator<T>(schema: RT.Runtype<T>) {
   const Ctx = Context.create<T>();
 
   const validate: Middleware = async tools => {
     const jsonBody = tools.readContextOrFail(JsonParserConsumer);
-    const body = await schema.validate(jsonBody).catch((e): never => {
-      if (e instanceof Yup.ValidationError) {
-        throw new HttpError.BadRequest(e.message);
-      }
-      throw e;
-    });
-    return tools.withContext(Ctx.Provider(body)).next();
+
+    const result = schema.validate(jsonBody);
+    if (result.success === false) {
+      throw new HttpError.BadRequest(result.message);
+    }
+    return tools.withContext(Ctx.Provider(result.value)).next();
   };
 
   return {

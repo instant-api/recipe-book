@@ -14,8 +14,8 @@ import {
   CheminParam,
 } from 'tumau';
 import { read, write, Recipe } from './db';
-import { YupValidator } from './YupValidator';
-import * as Yup from 'yup';
+import { RuntypesValidator } from './RuntypesValidator';
+import * as RT from 'runtypes';
 import cuid from 'cuid';
 import { CuidSlugParam } from './CuidSlugParam';
 import { slugify } from './slugify';
@@ -53,32 +53,31 @@ function recipeList(items: Array<Recipe>): RecipeList {
   );
 }
 
-const ingredientYup = Yup.object().shape({
-  name: Yup.string().required(),
-  quantity: Yup.string().required(),
+const ingredientYup = RT.Record({
+  name: RT.String,
+  quantity: RT.String,
 });
 
-const newRecipeValidator = YupValidator(
-  Yup.object().shape({
-    name: Yup.string().required(),
-    time: Yup.number().nullable(),
-    tags: Yup.array()
-      .of(Yup.string())
-      .default([]),
-    ingredients: Yup.array()
-      .of(ingredientYup)
-      .default([]),
-    description: Yup.string().required(),
-  })
+const newRecipeValidator = RuntypesValidator(
+  RT.Record({
+    name: RT.String,
+    time: RT.Number.Or(RT.Null),
+    description: RT.String,
+  }).And(
+    RT.Partial({
+      ingredients: RT.Array(ingredientYup),
+      tags: RT.Array(RT.String),
+    })
+  )
 );
 
-const updateRecipeValidator = YupValidator(
-  Yup.object().shape({
-    name: Yup.string(),
-    time: Yup.number(),
-    tags: Yup.array().of(Yup.string()),
-    ingredients: Yup.array().of(ingredientYup),
-    description: Yup.string().required(),
+const updateRecipeValidator = RuntypesValidator(
+  RT.Partial({
+    name: RT.String,
+    time: RT.Number.Or(RT.Null),
+    tags: RT.Array(RT.String),
+    ingredients: RT.Array(ingredientYup),
+    description: RT.String,
   })
 );
 
@@ -100,9 +99,13 @@ export function createServer(filePath: string, helpContent: string): TumauServer
           return JsonResponse.withJson(recipeList(data.recipes));
         }),
         Route.POST(ROUTES.recipe, newRecipeValidator.validate, async tools => {
-          const { name, time = null, description, ingredients, tags } = newRecipeValidator.getValue(
-            tools
-          );
+          const {
+            name,
+            time = null,
+            description,
+            ingredients = [],
+            tags = [],
+          } = newRecipeValidator.getValue(tools);
           const data = await read(filePath);
           const id = cuid.slug();
           const recipe: Recipe = {
