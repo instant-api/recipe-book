@@ -14,8 +14,8 @@ import {
   CheminParam,
 } from 'tumau';
 import { read, write, Recipe } from './db';
-import { RuntypesValidator } from './RuntypesValidator';
-import * as RT from 'runtypes';
+import { ZodValidator } from './ZodValidator';
+import z from 'zod';
 import cuid from 'cuid';
 import { CuidSlugParam } from './CuidSlugParam';
 import { slugify } from './slugify';
@@ -53,31 +53,31 @@ function recipeList(items: Array<Recipe>): RecipeList {
   );
 }
 
-const ingredientYup = RT.Record({
-  name: RT.String,
-  quantity: RT.String,
+const ingredientValidator = z.object({
+  name: z.string(),
+  quantity: z.string(),
 });
 
-const newRecipeValidator = RuntypesValidator(
-  RT.Record({
-    name: RT.String,
-    time: RT.Number.Or(RT.Null),
-    description: RT.String,
-  }).And(
-    RT.Partial({
-      ingredients: RT.Array(ingredientYup),
-      tags: RT.Array(RT.String),
-    })
-  )
+const newRecipeValidator = ZodValidator(
+  z.object({
+    name: z.string(),
+    time: z.number().nullable(),
+    description: z.string(),
+    ingredients: z.array(ingredientValidator).optional(),
+    tags: z.array(z.string()).optional(),
+  })
 );
 
-const updateRecipeValidator = RuntypesValidator(
-  RT.Partial({
-    name: RT.String,
-    time: RT.Number.Or(RT.Null),
-    tags: RT.Array(RT.String),
-    ingredients: RT.Array(ingredientYup),
-    description: RT.String,
+const updateRecipeValidator = ZodValidator(
+  z.object({
+    name: z.string().optional(),
+    time: z
+      .number()
+      .nullable()
+      .optional(),
+    tags: z.array(z.string()).optional(),
+    ingredients: z.array(ingredientValidator).optional(),
+    description: z.string().optional(),
   })
 );
 
@@ -94,7 +94,7 @@ export function createServer(filePath: string, helpContent: string): TumauServer
         Route.GET(ROUTES.home, () => {
           return TumauResponse.withHtml(helpContent);
         }),
-        Route.GET(ROUTES.recipes, async _tools => {
+        Route.GET(ROUTES.recipes, async _ctx => {
           const data = await read(filePath);
           return JsonResponse.withJson(recipeList(data.recipes));
         }),
@@ -120,8 +120,8 @@ export function createServer(filePath: string, helpContent: string): TumauServer
           await write(filePath, data);
           return JsonResponse.withJson(recipe);
         }),
-        Route.GET(ROUTES.recipeById, async tools => {
-          const id = tools.readContextOrFail(RouterConsumer).getOrFail(ROUTES.recipeById).id;
+        Route.GET(ROUTES.recipeById, async ctx => {
+          const id = ctx.getOrFail(RouterConsumer).getOrFail(ROUTES.recipeById).id;
           const data = await read(filePath);
           const recipe = data.recipes.find(t => t.id === id);
           if (!recipe) {
@@ -129,14 +129,14 @@ export function createServer(filePath: string, helpContent: string): TumauServer
           }
           return JsonResponse.withJson(recipe);
         }),
-        Route.PUT(ROUTES.recipeById, updateRecipeValidator.validate, async tools => {
-          const id = tools.readContextOrFail(RouterConsumer).getOrFail(ROUTES.recipeById).id;
+        Route.PUT(ROUTES.recipeById, updateRecipeValidator.validate, async ctx => {
+          const id = ctx.getOrFail(RouterConsumer).getOrFail(ROUTES.recipeById).id;
           const data = await read(filePath);
           const recipe = data.recipes.find(t => t.id === id);
           if (!recipe) {
             throw new HttpError.NotFound();
           }
-          const updated = updateRecipeValidator.getValue(tools);
+          const updated = updateRecipeValidator.getValue(ctx);
           if (updated.name !== undefined) {
             recipe.name = updated.name;
           }
@@ -155,8 +155,8 @@ export function createServer(filePath: string, helpContent: string): TumauServer
           await write(filePath, data);
           return JsonResponse.withJson(recipe);
         }),
-        Route.DELETE(ROUTES.recipeById, async tools => {
-          const id = tools.readContextOrFail(RouterConsumer).getOrFail(ROUTES.recipeById).id;
+        Route.DELETE(ROUTES.recipeById, async ctx => {
+          const id = ctx.getOrFail(RouterConsumer).getOrFail(ROUTES.recipeById).id;
           const data = await read(filePath);
           const recipeIndex = data.recipes.findIndex(t => t.id === id);
           if (recipeIndex === -1) {
@@ -166,7 +166,7 @@ export function createServer(filePath: string, helpContent: string): TumauServer
           await write(filePath, data);
           return JsonResponse.noContent();
         }),
-        Route.GET(ROUTES.tags, async _tools => {
+        Route.GET(ROUTES.tags, async _ctx => {
           const data = await read(filePath);
           const tags: Set<string> = new Set();
           data.recipes.forEach(recipe => {
@@ -176,8 +176,8 @@ export function createServer(filePath: string, helpContent: string): TumauServer
           });
           return JsonResponse.withJson(Array.from(tags));
         }),
-        Route.GET(ROUTES.recipesByTag, async tools => {
-          const tag = tools.readContextOrFail(RouterConsumer).getOrFail(ROUTES.recipesByTag).tag;
+        Route.GET(ROUTES.recipesByTag, async ctx => {
+          const tag = ctx.getOrFail(RouterConsumer).getOrFail(ROUTES.recipesByTag).tag;
           const data = await read(filePath);
           const recipes = data.recipes.filter(recipe => {
             return recipe.tags.indexOf(tag) >= 0;
