@@ -27,6 +27,7 @@
   "scripts": {
     "build": "tsdx build",
     "lint": "tsdx lint",
+    "test": "tsdx test --passWithNoTests",
     "pub": "tsdx build && np",
     "start": "tsdx watch"
   },
