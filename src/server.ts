@@ -1,7 +1,8 @@
 import {
   TumauServer,
   Chemin,
-  Middleware,
+  compose,
+  createServer as createTumauServer,
   RouterPackage,
   Route,
   TumauResponse,
@@ -82,9 +83,9 @@ const updateRecipeValidator = ZodValidator(
 );
 
 export function createServer(filePath: string, helpContent: string): TumauServer {
-  const server = TumauServer.create({
+  const server = createTumauServer({
     handleErrors: false,
-    mainMiddleware: Middleware.compose(
+    mainMiddleware: compose(
       CorsPackage({
         allowHeaders: ['content-type'],
       }),
